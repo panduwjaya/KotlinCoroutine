@@ -29,7 +29,7 @@ Sebelumnya kita tahu untuk menangguhkan komputasi di Java, kita biasanya menggun
 Kotlin memiliki sebuah fitur bernama suspending function, dimana kita bisa menangguhkan waktu eksekusi sebuah function
 tanpa harus mem-block thread yang sedang menjalankannya.
 Jadi dengan suspend function kita bisa menangguhkan pekerjaan suatu task,lalu mengerjakan task yg lainnya,kemudian kembali ke pekerjaan sebelumnya
-Syarat menjalankan suspend function di Kotlin adalah, harus dipanggil dari suspend function lainnya.
+Syarat menjalankan suspend function di Kotlin adalah, harus dipanggil dari suspend function lainnya atau di dalam coroutine.
 namun secara default coroutine merupakan suspend function jadi kita tidak perlu mengubah banyak method lain untuk memanggil suspend function
 */
 

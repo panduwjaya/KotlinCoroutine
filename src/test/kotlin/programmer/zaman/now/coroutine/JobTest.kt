@@ -78,8 +78,8 @@ class JobTest {
     joinAll Function
     Kadang kita akan membuat coroutine lebih dari satu sekaligus
     Untuk menunggu semua Job coroutine selesai berjalan kita bisa menggunakan join() function
-    Namun jika kita panggil satu-satu tiap Job coroutine nya, akan sangat mengganggu sekali
-    Kotlin menyediakan joinAll(jobs) function untuk menunggu semua job selesai
+    Namun Jika coroutine dalam jumlah banyak,kita panggil satu-satu tiap Job coroutine nya,tentu sangat mengganggu sekali
+    Kotlin menyediakan joinAll(jobs),function untuk menunggu semua job selesai pada coroutine yg berjumlah banyak
      */
     @Test
     fun testJobJoinAll(){
