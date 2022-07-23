@@ -5,6 +5,14 @@ import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.concurrent.thread
 
+/*
+Membuat Coroutine
+Coroutine tidak bisa berjalan sendiri, dia perlu berjalan di dalam sebuah Scope.
+Salah satu scope yang bisa kita gunakan adalah GlobalScope (masih banyak scope yang ada, dan akan kita bahas nanti dimateri tersendiri)
+Untuk membuat coroutine, kita bisa menggunakan method launch()
+Dan di dalam coroutine, kita bisa memanggil suspend function
+ */
+
 class CoroutineTest {
 
     suspend fun hello() {
