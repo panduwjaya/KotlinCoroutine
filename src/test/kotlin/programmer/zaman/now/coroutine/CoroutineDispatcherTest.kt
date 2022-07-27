@@ -6,6 +6,19 @@ import java.util.concurrent.Executors
 
 class CoroutineDispatcherTest {
 
+    /*
+    Coroutine Dispatcher
+    Selain ada Job di dalam CoroutineContext, ada juga object CoroutineDispatcher.
+    CoroutineDispatcher digunakan untuk menentukan thread mana yang bertanggung jawab untuk mengeksekusi coroutine
+    Secara default sudah ada setting default dispatcher, namun kita bisa menggantinya jika kita mau artinya kita bisa melakukan custom dispatcher
+
+    Dispatchers
+    Ada object Dispatchers yang bisa kita gunakan untuk mengganti CoroutineDispatcher
+    Dispatchers.Default, ini adalah default dispatcher, isinya minimal 2 thread, atau sebanyak jumlah cpu (mana yang lebih banyak). Dispatcher ini cocok untuk proses coroutine yang cpu-bound
+    Dispatcher.IO, ini adalah dispatcher yang berisikan thread sesuai dengan kebutuhan, ketika butuh akan dibuat, ketika sudah tidak dibutuhkan, akan dihapus, mirip cache thread pool di executor service. Dispatcher ini akan sharing thread dengan Default dispatcher
+    Dispatchers.Main, ini adalah dispatchers yang berisikan main thread UI, cocok ketika kita butuh running di thread main seperti di Java Swing, JavaFX atau Android. Untuk menggunakan ini, kita harus menambah library ui tambahan
+     */
+
     @Test
     fun testDispatcher() {
         runBlocking {
