@@ -92,6 +92,19 @@ class CoroutineDispatcherTest {
         }
     }
 
+    /*
+    ============= Membuat Coroutine Dispatcher ===============
+
+    Membuat Coroutine Dispatcher
+    Saat membuat aplikasi, kadang kita ingin flexible menentukan thread yang akan kita gunakan untuk  menjalankan coroutine
+    Misal, kita ingin membedakan thread untuk layer web, layer http client, dan lain-lain
+    jadi disini tujuan kita adalah menentukan tugas setiap Thread itu masing masing,sehingga setiap Thread mempunyai tugas nya sendiri
+    Oleh karena ini, membuat Coroutine Dispatcher sendiri sangat direkomendasikan.
+    Untuk membuat Coroutine Dispatcher secara manual, kita bisa melakukannya dengan cara menggunakan ExecutorService
+    untuk merubah dari ExecutorService ke CoroutineDispatcher kita bisa menggunakan function asCoroutineDispatcher()
+
+     */
+
     @Test
     fun testExecutorService() {
         val dispatcherService = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
@@ -100,14 +113,23 @@ class CoroutineDispatcherTest {
         runBlocking {
             val job1 = GlobalScope.launch(dispatcherService) {
                 println("Job 1 : ${Thread.currentThread().name}")
-            }
+            } // Job 1 : pool-1-thread-1 @coroutine#2 , artinya job 1 berjalan di ThreadPool 1
             val job2 = GlobalScope.launch(dispatcherWeb) {
                 println("Job 2 : ${Thread.currentThread().name}")
-            }
+            } // Job 2 : pool-2-thread-1 @coroutine#3 , artinya job 2 berjalan di ThreadPool 2 yg mana job 1 dan job 2 berjalan di ExecutorService berbeda atau Dispatcher yg berbeda
             joinAll(job1, job2)
         }
     }
 
+    /*
+    =============== withContext Function =================
+
+    Sebelumnya kita sudah tahu, bahwa ternyata saat kita melakukan delay(), suspend function tersebut akan di trigger di thread yang berbeda.
+    Bagaimana caranya jika kita ingin menjalankan code program kita dalam coroutine di thread yang berbeda dengan thread coroutine awalnya?
+    Untuk melakukan itu, kita bisa menggunakan function withContext()
+    Function withContext() sebenarnya bisa kita gunakan untuk mengganti CoroutineContext, namun karena CoroutineDispatcher adalah turunan CoroutineContext,
+    jadi kita bisa otomatis mengganti thread yang akan digunakan di coroutine menggunakan function withContext()
+     */
     @Test
     fun testWithContext() {
         val dispatcherClient = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
