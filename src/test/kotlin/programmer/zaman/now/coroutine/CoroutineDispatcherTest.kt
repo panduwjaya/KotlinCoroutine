@@ -73,6 +73,7 @@ class CoroutineDispatcherTest {
 
             /*
             output:
+
             runBlocking Test worker @coroutine#1
             Unconfined : Test worker @coroutine#2 -> eksekusi pertama unconfined
             Confined : DefaultDispatcher-worker-1 @coroutine#3 -> eksekusi pertama confined
@@ -119,6 +120,13 @@ class CoroutineDispatcherTest {
             } // Job 2 : pool-2-thread-1 @coroutine#3 , artinya job 2 berjalan di ThreadPool 2 yg mana job 1 dan job 2 berjalan di ExecutorService berbeda atau Dispatcher yg berbeda
             joinAll(job1, job2)
         }
+        /*
+        output:
+
+        Job 2 : pool-2-thread-1 @coroutine#3
+        Job 1 : pool-1-thread-1 @coroutine#2
+        BUILD SUCCESSFUL in 7s
+         */
     }
 
     /*
@@ -129,24 +137,44 @@ class CoroutineDispatcherTest {
     Untuk melakukan itu, kita bisa menggunakan function withContext()
     Function withContext() sebenarnya bisa kita gunakan untuk mengganti CoroutineContext, namun karena CoroutineDispatcher adalah turunan CoroutineContext,
     jadi kita bisa otomatis mengganti thread yang akan digunakan di coroutine menggunakan function withContext()
+
+    *fungsi:
+    fungsi dari withContext() adalah untuk melakukan perubahan Thread dan menentukan Thread mana yg digunakan pada eksekusi coroutine
      */
     @Test
     fun testWithContext() {
         val dispatcherClient = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
         runBlocking {
             val job = GlobalScope.launch(Dispatchers.IO) {
-                println("1 ${Thread.currentThread().name}")
+                // Thread yg digunakan pada coroutine bagian ini berasal dari Dispathcer.IO
+                println("1 ${Thread.currentThread().name}") // output, 1 DefaultDispatcher-worker-1 @coroutine#2
                 withContext(dispatcherClient) {
-                    println("2 ${Thread.currentThread().name}")
+                    // Thread yg digunakan pada coroutine bagian ini berasal diambil dari dispatcherClient
+                    println("2 ${Thread.currentThread().name}") // output, 2 pool-1-thread-1 @coroutine#2
                 }
-                println("3 ${Thread.currentThread().name}")
+                // Thread yg digunakan pada coroutine bagian ini berasal dari Dispathcer.IO
+                println("3 ${Thread.currentThread().name}") // output, 3 DefaultDispatcher-worker-1 @coroutine#2
                 withContext(dispatcherClient) {
-                    println("4 ${Thread.currentThread().name}")
+                    // Thread yg digunakan pada coroutine bagian ini berasal diambil dari dispatcherClient
+                    println("4 ${Thread.currentThread().name}") // ouput, 4 pool-1-thread-2 @coroutine#2
                 }
             }
             job.join()
+            /*
+            output:
+
+            1 DefaultDispatcher-worker-1 @coroutine#2
+            2 pool-1-thread-1 @coroutine#2
+            3 DefaultDispatcher-worker-1 @coroutine#2
+            4 pool-1-thread-2 @coroutine#2
+            BUILD SUCCESSFUL in 47s
+             */
         }
     }
+
+    /*
+
+     */
 
     @Test
     fun testCancelFinally() {
