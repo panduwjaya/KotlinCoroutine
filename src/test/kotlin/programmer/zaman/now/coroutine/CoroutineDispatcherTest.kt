@@ -222,6 +222,7 @@ class CoroutineDispatcherTest {
     }
      */
 
+    // Kode : Check isActive di Finally
     @Test
     fun testCancelFinally() {
         runBlocking {
@@ -240,6 +241,7 @@ class CoroutineDispatcherTest {
         }
     }
 
+    // Kode : Non Cancellable Context
     @Test
     fun testNonCancellable() {
         runBlocking {
