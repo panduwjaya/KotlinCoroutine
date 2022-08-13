@@ -80,6 +80,18 @@ class SequentialSuspendFunctionTest {
         }
     }
 
+    /*
+    ========= Yield Function =============
+
+    Yield function
+    Seperti yang pernah kita bahas sebelumnya, bahwa suspend function akan dijalankan secara sequential,
+    artinya jika ada sebuah suspend function yang panjang dan lama,Ada baiknya kita beri kesempatan ke suspend function lainnya untuk dijalankan.
+    Coroutine berjalan secara concurrent, artinya 1 dispatcher bisa digunakan untuk mengeksekusi beberapa coroutine secara bergantian.
+    Saat coroutine kita berjalan,Dan jika kita ingin memberi kesempatan ke coroutine yang lain untuk berjalan, kita bisa menggunakan yield function
+    yield function itu bisa di cancel, artinya jika sebuah coroutine telah dibatalkan, maka secara otomatis yield function akan throw CancellationException
+
+     */
+
     suspend fun runJob(number : Int){
         println("Start job $number in thread ${Thread.currentThread().name}")
         yield()
@@ -97,5 +109,18 @@ class SequentialSuspendFunctionTest {
 
             delay(2000)
         }
+        /*
+        output tanpa yield:
+        Start job 1 in thread pool-1-thread-1 @coroutine#2
+        End job 1 in thread pool-1-thread-1 @coroutine#2
+        Start job 2 in thread pool-1-thread-2 @coroutine#3
+        End job 2 in thread pool-1-thread-2 @coroutine#3
+
+        output dengan yield:
+        Start job 1 in thread pool-1-thread-1 @coroutine#2
+        Start job 2 in thread pool-1-thread-2 @coroutine#3
+        End job 1 in thread pool-1-thread-3 @coroutine#2
+        End job 2 in thread pool-1-thread-4 @coroutine#3
+         */
     }
 }
