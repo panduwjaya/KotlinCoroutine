@@ -83,6 +83,15 @@ class CoroutineTest {
         println("Finish")
     }
 
+    /*
+    ============ Coroutine Parent & Child ===============
+
+    Coroutine Parent & Child
+    Selain coroutine scope, coroutine sendiri bisa memiliki child coroutine
+    Saat membuat coroutine child, secara otomatis kita akan mewarisi coroutine context yang ada di coroutine parent
+    Dan coroutine parent akan menunggu sampai eksekusi coroutine child nya selesai semua
+
+     */
     @Test
     fun testParentChild() {
         runBlocking {
@@ -98,11 +107,31 @@ class CoroutineTest {
                 delay(1000)
                 println("Parent Done")
             }
-
             job.join()
         }
+        /*
+        output:
+        Parent Done
+        Child 1 Done
+        Child 2 Done
+
+        Arti dari child coroutine adalah launch atau beberapa launch yg berasal dari sebuah scope launch yg sama
+        Berbeda dengan coroutine biasa,pada coroutine parent-child sebuah coroutine parent akan menunggu sampai eksekusi coroutine child nya selesai semua
+        Sedangkan pada coroutine biasa menggunakan launch yg berasal dari coroutine berbeda apabila terdapat salah satu proses coroutine yg belum selesai/delay maka proses tsb akan ditinggal dan dilanjutkan ke bagian lain
+         */
     }
 
+    /*
+    =========== cancelChildren Function ============
+
+    cancelChildren Function
+    Sebelumnya sudah dibahas kalo coroutine itu memiliki parent dan child
+    Coroutine akan direpresentasikan sebagai Job (Deferred tuturan dari Job), dan di Job kita bisa mendapatkan semua children nya menggunakan field children
+    Selain itu ada sebuah function bernama cancelChildren, function ini bisa kita gunakan untuk membatalkan semua coroutine children.
+    Jika kita membatalkan Job parent, kita tidak perlu membatalkan children nya secara manual, karena saat Job di batalkan, semua child nya akan dibatalkan
+     */
+
+    // Kode : cancelChildren Function
     @Test
     fun testParentChildCancel() {
         runBlocking {
@@ -122,6 +151,16 @@ class CoroutineTest {
             job.cancelChildren()
             job.join()
         }
+        /*
+        output:
+        Parent Done
+
+        Output yang dihasilkan hanya dari coroutine Parent karena menggunakan cancelChildren()
+        Ketika kita menggunakan cancelChildren maka semua CoroutineChild yg ada di dalam ParentCoroutine,namun ParentCoroutine tidak ikut dibatalkan
+
+        info:
+        job.Children() artinya mengambil data dari coroutineChildren saja tanpa mengambil data dari coroutineParent
+         */
     }
 
     @Test
