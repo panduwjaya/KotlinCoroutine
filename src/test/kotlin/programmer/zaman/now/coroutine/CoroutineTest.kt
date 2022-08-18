@@ -163,6 +163,18 @@ class CoroutineTest {
          */
     }
 
+    /*
+    ========= awaitCancellation Function ==========
+
+    awaitCancellation Function
+    Secara default, sebuah coroutine akan berhenti ketika seluruh code selesai dijalankan
+    Jika ada kebutuhan kita tidak mau coroutine berhenti sampai di Job nya di cancel, maka kita bisa menggunakan function awaitCancellation
+    Function awaitCancellation akan throw CancellationException jika job di cancel, dan tidak akan menghentikan coroutine jika belum di cancel
+
+    fungsi:
+    Fungsi dari awaitCancellation function adalah ketika kita tidak ingin sebuah coroutine berhenti dan baru berhenti setelah job nya di cancel kita bisa menggunakan function awaitCancellation
+     */
+
     @Test
     fun testAwaitCancellation() {
         runBlocking {
