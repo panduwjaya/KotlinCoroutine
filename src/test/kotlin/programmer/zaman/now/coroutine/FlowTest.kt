@@ -34,7 +34,7 @@ class FlowTest {
         }
 
         runBlocking {
-            // dikarenakan collect merupakan suspend function maka untuk memanggilnya perlu didalam runBlocking
+            // dikarenakan collect merupakan suspend function maka untuk memanggilnya perlu didalam coroutine yaitu menggunakan runBlocking
             // jika flow tidak dipanggil menggunakan collect maka kode tersebut tidak akan di eksekusi,karena sifatnya yg lazy
             flow1.collect {
                 println("Receive $it")
@@ -65,14 +65,27 @@ class FlowTest {
          */
     }
 
+    /*
+    ====== Flow Operator ======
+
+    Flow Operator
+    Flow mirip dengan Kotlin Collection, memiliki banyak operator
+    Hampir semua operator yang ada di Kotlin Collection ada juga di Flow, seperti map, flatMap, filter, reduce, dan lain-lain
+    Yang membedakan dengan operator yang ada di Kotlin Collection adalah, operator di Flow mendukung suspend function
+
+    catatan:
+    Kelebihan,kita tidak perlu kotlin collection apabila ingin membuat collection di coroutine
+    Cukup menggunakan flow semua operartor yg ada seperti map, flatMap, filter, reduce, dan lain-lain didukung oleh flow operator
+    Sehingga operator-operator tersebut dapat kita gunakan saat menggunkan flow tanpa tambahan kotlin collection
+     */
     suspend fun numberFlow(): Flow<Int> = flow {
-        repeat(100) {
+        repeat(11) {
             emit(it)
         }
     }
 
     suspend fun changeToString(number: Int): String {
-        delay(100)
+        delay(1000)
         return "Number $number"
     }
 
@@ -80,12 +93,45 @@ class FlowTest {
     fun testFlowOperator() {
         runBlocking {
             val flow1 = numberFlow()
+            // disini kita akan menggunakan operator filter untuk memfilter bilangan genap
+            // kita juga dapat menggunakan macam-macam operator menggunakan (ctrl + spasi)
             flow1.filter { it % 2 == 0 }
                     .map { changeToString(it) }
                     .collect { println(it) }
         }
+        /*
+        output:
+        Number 0
+        Number 2
+        Number 4
+        Number 6
+        Number 8
+        Number 10
+
+        catatan:
+        Menampilkan output value hasil filter bilangan genap
+         */
     }
 
+    /*
+    ========= Flow Exception ========
+
+    Flow Exception
+    Saat terjadi exception pada flow, di bagian operator apapun, maka flow akan berhenti, lalu exception akan di throw oleh flow
+    Untuk menangkap exception tersebut, kita bisa menggunakan block try-catch
+    Namun flow juga menyediakan operator untuk menangkap exception tersebut, nama functionnya adalah catch()
+    Dan untuk finally, flow juga sudah menyediakan operatornya, nama function nya adalah onCompletion()
+    Ingat, jika terjadi error di flow, flow akan dihentikan
+    Jika kita ingin flow tidak berhenti saat terjadi error,Pastikan kita selalu melakukan try catch di kode flow nya
+
+    fungsi:
+    - fungsi dari map adalah untuk memvalidasi
+    - fungsi dari onEach adalah untuk menangkap setiap value yg ada
+    - fungsi dari catch adalah untuk menangkap exception yg ada
+    - onCompletion berfungsi untuk menentukan apa yg akan dikerjakan setelah program selesai dieksekusi
+      baik hasil eksekusi itu gagal atau berhasil output dari onCompletion akan tetap muncul
+    - collect untuk memanggil data pada flow
+     */
     @Test
     fun testFlowException() {
         runBlocking {
@@ -96,6 +142,24 @@ class FlowTest {
                     .onCompletion { println("Done") }
                     .collect()
         }
+        /*
+        output:
+        0
+        1
+        2
+        3
+        4
+        5
+        6
+        7
+        8
+        9
+        Error Check failed.
+        Done
+
+        catatan:
+        Ketika tidak sesuai dengan validasi maka akan terjadi error,error tersebut akan ditangkap menggunakan catch()
+         */
     }
 
     @Test
