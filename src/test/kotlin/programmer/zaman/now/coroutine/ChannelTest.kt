@@ -61,11 +61,37 @@ class ChannelTest {
         Begitupun sebaliknya ketika terdapat coroutine penerima namun tidak ada coroutine pengirim maka semua akses datanya akan diblok
          */
     }
+    /*
+    ========== Channel Backpressure ==========
 
+    Ketika terjadi peristiwa dimana kemampuan coroutine pengirim (send) lebih cepat dibandingkan dengan coroutine penerima (receive)
+    Maka kotlin mempunyai solusi dari permasalahan tersebut,yaitu menggunakan channel pressure
+    Dengan menggunakan channel pressure data yang dikirim cepat akan ditampung terlebih dahulu pada channel,kemudian baru diteruskan ke coroutine penerima
+    Sehingga kecepatan transfer dari data yang dikirim oleh coroutine pengirim tidak akan melambat mengikuti dari coroutine penerima
+
+    Channel Buffer
+    Pengertian Channel buffer adalah kemampuan untuk menampung antrian data dalam sebuah channel sesuai dengan kebutuhan kita
+    Secara default, channel hanya bisa menampung satu data, artinya jika kita mencoba mengirim data lain ke channel, maka kita harus menunggu data yang ada diambil.
+    Namun kita bisa menambahkan buffer di dalam channel atau istilahnya capacity.Jadi defaultnya capacity nya adalah 0 (buffer atau antrian yang bisa ditampung)
+    Fungsi,Jadi selama belum terdapat coroutine penerima namun coroutine pengirim sudah mengirim data maka data tersebut akan ditampung didalam buffer menunggu sampai adanya coroutine penerima
+
+    Contoh Constant Channel Capacity
+    format (- Constant = Capacity -> Keterangan)
+    Int.MAX_VALUE = bernilai sekitar 2 milliar data yang dapat ditampung dalam antrian channel
+
+    - Channel.UNLIMITED = Int.MAX_VALUE -> Total kapasitas buffer nya Int.MAX_VALUE atau bisa dibilang unlimited
+    - Channel.RENDEZVOUS = 0 -> Tidak memiliki buffer
+    - Channel.BUFFER = 64 atau bisa di setting via properties -> Total kapasitas buffer nya 64 atau sesuai properties
+    - Channel.CONFLATED = -1 -> saat mengirim data
+     */
+
+    // TES CHANNEL UNLIMITED
     @Test
     fun testChannelUnlimited() {
         runBlocking {
 
+            // penggunaan channel buffer unlimited
+            // artinya dapat menampung data antrian dalam jumlah banyak dari coroutine pengirim sampai terdapat coroutine penerima
             val channel = Channel<Int>(capacity = Channel.UNLIMITED)
 
             val job1 = launch {
@@ -86,6 +112,8 @@ class ChannelTest {
         }
     }
 
+    // TES CHANNEL CONFLATED
+    // jadi hanya data terakhir saja yang akan diambil,sedangkan data-data sebelumnya akan dihapus
     @Test
     fun testChannelConflated() {
         runBlocking {
@@ -108,6 +136,14 @@ class ChannelTest {
             channel.close()
 
         }
+        /*
+        output:
+        send data 1 to channel
+        send data 2 to channel
+        receive data 2
+
+        Jadi yang diterima hanya data 2 saja,karena yang diambil hanya data terakhir saja sedangkan data-data sebelumnya tidak ikut diambil
+         */
     }
 
     @Test
