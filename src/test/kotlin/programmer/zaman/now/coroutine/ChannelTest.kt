@@ -8,13 +8,26 @@ import kotlinx.coroutines.channels.produce
 import org.junit.jupiter.api.Test
 
 class ChannelTest {
+    /*
+    ======== Channel ========
 
+    Channel
+    Channel adalah fitur di Kotlin Coroutine yang bisa digunakan untuk mentransfer aliran data dari satu tempat ke tempat lain
+    Artinya berfungsi untuk mentransfer data dari satu coroutine ke coroutine lainnya
+    Channel mirip struktur data queue, dimana ada data masuk dan ada data keluar,biasanya data masuk dari satu buah coroutine dan data keluar nya dari coroutine lainnya
+    Untuk mengirim data ke channel, kita bisa menggunakan function send() dan untuk mengambil data di channel kita bisa menggunakan function receive()
+    Channel itu sifatnya blocking, artinya jika tidak ada data di channel, saat kita mengambil data menggunakan receive() maka dia akan menunggu sampai ada data. Dan begitu juga ketika ada data di channel, dan tidak ada yang mengambilnya, saat kita send() data, dia akan menunggu sampai channel kosong (datanya diambil)
+    Untuk menutup channel, kita bisa menggunakan function close()
+    Saat channel sudah di close maka tidak bisa mengirim data maupun menerima data
+     */
     @Test
     fun testChannel() {
         runBlocking {
 
+            // membuat channel
             val channel = Channel<Int>()
 
+            // coroutine pertama (coroutine pertama berfungsi untuk mengirim data)
             val job1 = launch {
                 println("send data 1 to channel")
                 channel.send(1)
@@ -22,15 +35,31 @@ class ChannelTest {
                 channel.send(2)
             }
 
+            // coroutine kedua (coroutine kedua berfungsi untuk menerima data)
             val job2 = launch {
                 println("receive data ${channel.receive()}")
                 println("receive data ${channel.receive()}")
             }
 
             joinAll(job1, job2)
+
+            // setiap selesai membuat channel jangan lupa untuk men close channel
             channel.close()
 
         }
+        /*
+        Output:
+        send data 1 to channel
+        receive data 1
+        send data 2 to channel
+        receive data 2
+
+        Catatan:
+        Ketika coroutine pengirim meengirim data ke channel maka secara otomatis langsung diterima oleh coroutine penerima
+        Saat terdapat coroutine pengirim lalu mengirimkan data ke channel namun tidak terdapat coroutine penerima
+        maka secara otomatis channel akan mem-blok semua akses data sampai terdapat coroutine penerima
+        Begitupun sebaliknya ketika terdapat coroutine penerima namun tidak ada coroutine pengirim maka semua akses datanya akan diblok
+         */
     }
 
     @Test

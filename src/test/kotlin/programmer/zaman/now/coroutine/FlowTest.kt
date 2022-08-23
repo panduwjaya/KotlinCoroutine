@@ -162,6 +162,14 @@ class FlowTest {
          */
     }
 
+    /*
+    ======= Cancellable Flow =======
+
+    Membatalkan Flow
+    Flow adalah coroutine, artinya dia bisa dibatalkan
+    Untuk membatalkan flow, caranya sangat mudah, kita bisa menggunakan function cancel() milik coroutine scope
+    function cancel() tersebut akan secara otomatis membatalkan job coroutine
+     */
     @Test
     fun testCancellableFlow() {
         val scope = CoroutineScope(Dispatchers.IO)
@@ -169,13 +177,29 @@ class FlowTest {
             val job = scope.launch {
                 numberFlow()
                         .onEach {
-                            if (it > 10) cancel()
+                            if (it > 9) cancel() // disini kita akan membatalkan flow nya
                             else println(it)
                         }
                         .collect()
             }
             job.join()
         }
+        /*
+        ouput:
+        0
+        1
+        2
+        3
+        4
+        5
+        6
+        7
+        8
+        9
+
+        catatan:
+        Saat mencapai nilai 10 maka perulangan flow tersebut akan divalidasi dan job coroutine akan dibatalkan
+         */
     }
 
     @Test
