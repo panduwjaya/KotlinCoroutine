@@ -201,6 +201,9 @@ class ChannelTest {
     Namun pertanyaannya, bagaimana nasib dengan data yang sudah dikirim?
     Kita bisa menambah lambda function ketika membuat channel, sebagai fallback ketika sebuah data dikirim dan channel sudah di close, maka fallback tersebut akan dieksekusi
     Function fallback tersebut bernama onUndeliveredElement
+
+    fungsi:
+    fungsi dari undelivered element untuk mendeteksi element mana yg tidak di delivered ke receive saat channel di close
      */
     @Test
     fun testUndeliveredElement() {
@@ -216,27 +219,69 @@ class ChannelTest {
             }
             job.join()
         }
+        /*
+        output:
+        Undelivered Element 10
+
+        Channel was closed
+        kotlinx.coroutines.channels.ClosedSendChannelException: Channel was closed
+            at kotlinx.coroutines.channels.Closed.getSendException(AbstractChannel.kt:1105)
+            at kotlinx.coroutines.channels.AbstractSendChannel.helpCloseAndResumeWithSendException(AbstractChannel.kt:210)
+            at kotlinx.coroutines.channels.AbstractSendChannel.access$helpCloseAndResumeWithSendException(AbstractChannel.kt:19)
+            at kotlinx.coroutines.channels.AbstractSendChannel.sendSuspend(AbstractChannel.kt:200)
+            at kotlinx.coroutines.channels.AbstractSendChannel.send(AbstractChannel.kt:137)
+            at programmer.zaman.now.coroutine.ChannelTest$testUndeliveredElement$1$job$1.invokeSuspend(ChannelTest.kt:217)
+            (Coroutine boundary)
+         */
     }
 
+    /*
+    ======= Produce Function ========
+
+    Coroutine scope memiliki sebuah function bernama produce, ini digunakan untuk membuat sebuah coroutine yang digunakan untuk mengirim data ke channel,
+    sederhananya kita bisa membuat channel secara mudah dengan menggunakan function produce ini
+    Hasil return dari produce adalah ReceiveChannel (parent interface dari Channel), yang hanya bisa digunakan untuk mengambil data
+
+    fungsi:
+    Ketika kita ingin membuat channel secara otomatis tanpa harus menggunakan channel manual (coroutine send dan receive) kita bisa menggunakan Produce production
+
+    * Contoh Pembuatan channel serta coroutine sender dan coroutine receive:
+
+    fun testProduct(){
+        val scope = CoroutineScope(Dispatcher.IO)
+        val channel = Channel<Int>()
+
+        // coroutine send manual
+        val job1 = scope.launch {
+            repeat(10){
+                channel.send(it)
+            }
+        }
+
+        // coroutine receive manual
+        val job2 = scope.launch {
+            repeat(10){
+                channel.receive(it)
+            }
+        }
+
+        runBlocking {
+            joinAll(job1, job)
+        }
+    }
+     */
     @Test
     fun testProduce() {
         val scope = CoroutineScope(Dispatchers.IO)
-//        val channel = Channel<Int>()
-//
-//        val job1 = scope.launch {
-//            repeat(100) {
-//                channel.send(it)
-//            }
-//        }
 
         val channel: ReceiveChannel<Int> = scope.produce {
-            repeat(100) {
+            repeat(10) {
                 send(it)
             }
         }
 
         val job2 = scope.launch {
-            repeat(100) {
+            repeat(10) {
                 println(channel.receive())
             }
         }
@@ -244,5 +289,21 @@ class ChannelTest {
         runBlocking {
             joinAll(job2)
         }
+        /*
+        output:
+        0
+        1
+        2
+        3
+        4
+        5
+        6
+        7
+        8
+        9
+
+        catatan:
+        Hasil output yang ditampilkan oleh Produce memupunyai hasil output yg sama dengan coroutine send dan receive manual
+         */
     }
 }
