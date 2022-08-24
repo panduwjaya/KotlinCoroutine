@@ -82,7 +82,7 @@ class ChannelTest {
     - Channel.UNLIMITED = Int.MAX_VALUE -> Total kapasitas buffer nya Int.MAX_VALUE atau bisa dibilang unlimited
     - Channel.RENDEZVOUS = 0 -> Tidak memiliki buffer
     - Channel.BUFFER = 64 atau bisa di setting via properties -> Total kapasitas buffer nya 64 atau sesuai properties
-    - Channel.CONFLATED = -1 -> saat mengirim data
+    - Channel.CONFLATED = -1 -> hanya data terakhir saja yang akan diambil,sedangkan data-data sebelumnya akan dihapus
      */
 
     // TES CHANNEL UNLIMITED
@@ -146,6 +146,26 @@ class ChannelTest {
          */
     }
 
+    /*
+    ======== Channel Buffer Overflow =========
+
+    Channel Buffer Overflow
+    Ada keadaan dimana sebuah buffer dapat penuh hal tersebut terjadi apabila capacity yg kita set pada buffer tidak dapat menampung data yang dikirim
+    Walaupun kita sudah menggunakan buffer, ada kalanya buffer sudah penuh, dan sender tetap mengirimkan data hal itu disebut Channel Buffer Overflow
+    Dalam kasus seperti ini, kita bisa menggunakan beberapa strategy
+    Untuk mengatur ketika terjadi buffer overflow (kelebihan data yang ditampung oleh buffer), kita bisa menggunakan enum BufferOverflow
+
+    BufferOverflow Enum
+    format (BufferOverflow Enum = Keterangan)
+    - SUSPEND = Block sender, berfungsi untuk untuk mem-block sender dan menunggu hingga buffer kosong
+    - DROP_OLDEST = Hapus data di buffer yang paling lama (paling depan), Saat kita mengirim data dan terdapat data sebelumnya yang belum di receive maka data sebelumnya yang belum di receive tersebut akan dihapus
+    - DROP_LATEST = Hapus data di buffer yang paling baru (paling belakang), Saaat kita mengirim dan ternyata buffer telah penuh maka data yg dikirim terbaru tersebut akan di ignore atau dihiraukan
+
+    Cara menggunakan Enum buffer overflow:
+
+    - val channel = Channel<Int>(capacity = 10, onBufferOverflow = BufferOverflow.DROP_LATEST)
+    Cukup menambahkan onBufferOverflow didalam parameter buffer pada channel
+     */
     @Test
     fun testChannelBufferOverflow() {
         runBlocking {
@@ -172,6 +192,16 @@ class ChannelTest {
         }
     }
 
+    /*
+    ========== Channel Undelivered Element ===========
+
+    Channel Undelivered Element
+    Kadang ada kasus dimana sebuah channel sudah di close, tetapi ada coroutine yang masih mencoba mengirim data ke channel
+    Ketika kita mencoba mengirim data ke channel yang sudah close, maka secara otomatis channel akan mengembalikan error ClosedSendChannelException
+    Namun pertanyaannya, bagaimana nasib dengan data yang sudah dikirim?
+    Kita bisa menambah lambda function ketika membuat channel, sebagai fallback ketika sebuah data dikirim dan channel sudah di close, maka fallback tersebut akan dieksekusi
+    Function fallback tersebut bernama onUndeliveredElement
+     */
     @Test
     fun testUndeliveredElement() {
         val channel = Channel<Int>(capacity = 10) { value ->
