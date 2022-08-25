@@ -125,9 +125,14 @@ class BroadcastChannelTest {
     Conflated Broadcast Channel
 
     Conflated Broadcast Channel adalah turunan dari Broadcast Channel, sehingga cara kerjanya sama
+    Sehingga apa yang dapat dilakukan oleh broadcast channel dapat dilakukan juga oleh conflated broadcast channel
     Pada Broadcast Channel, walaupun receiver lambat, maka receiver tetap akan mendapatkan seluruh data dari sender
     Namun berbeda dengan Conflated Broadcast Channel, receiver hanya akan mendapat data paling baru dari sender
+    Artinya apabila terjadi antrian data dan ternyata terdapat kiriman data terbaru, maka yg diterima dari antrian tsb oleh receiver adalah data yg terbaru
     Jadi jika receiver lambat, receiver hanya akan mendapat data paling baru saja, bukan semua data
+
+    catatan:
+    Pada conflacated broadcast channel tidak mempunyai capacity dalam buffer
      */
     @Test
     fun testConflatedBroadcastChannel() {
@@ -136,6 +141,7 @@ class BroadcastChannelTest {
 
         val scope = CoroutineScope(Dispatchers.IO)
 
+        // sender dapat mengirim data setiap 1 detik
         val job1 = scope.launch {
             repeat(10){
                 delay(1000)
@@ -144,6 +150,8 @@ class BroadcastChannelTest {
             }
         }
 
+        // receiver dapat menerima data setiap 2 detik, yg berarti data yg diterima lebih lambat dari data yg dikirim
+        // sehingga akan terjadi antrian data, maka data yg diterima oleh receiver hanya data yg tebaru saja didalam antrian tersebut
         val job2 = scope.launch {
             repeat(10){
                 delay(2000)
@@ -152,8 +160,31 @@ class BroadcastChannelTest {
         }
 
         runBlocking {
+            // fungsi dari delay 11 detik adalah agar tidak error pada receive yang tidak seimbang dengan sender dikarenakn jumlah repeat
             delay(11_000)
             scope.cancel()
         }
+        /*
+        output:
+        Send 0
+        Receive 0
+        Send 1
+        Send 2
+        Receive 2
+        Send 3
+        Send 4
+        Receive 4
+        Send 5
+        Send 6
+        Receive 6
+        Send 7
+        Send 8
+        Receive 8
+        Send 9
+
+        Berdasarkan output diatas terlihat bahwa terdapat beberapa nilai yang tidak diterima oleh receiver
+        Hal tersebut terjadi karena sesuai dengan fungsi dari conflacated broadcast channel
+        Yaitu jika terjadi antrian pada sebuah data dan terdapat masukan data terbaru dalam antrian maka terbaru itu yg akan diterima oleh receiver
+         */
     }
 }
