@@ -202,6 +202,32 @@ class FlowTest {
          */
     }
 
+    /*
+    ========= Shared Flow ==========
+
+    Shared Flow vs Flow
+    Shared Flow adalah turunan dari Flow, sehingga apa yang bisa dilakukan di Flow, bisa juga dilakukan di Shared Flow
+    Kemampuan Shared Flow yang tidak dimiliki oleh Flow adalah, pada Shared Flow, kita bisa membuat lebih dari satu receiver
+    Pada flow hanya satu receiver sedangkan pada shared flow kita bisa membuat lebih dari satu receiver
+    Artinya ketika dipanggil menggunakan collect hanya flow tersebut yg dapat menerima datanya
+    Selain itu Shared Flow bersifat aktif atau hot, yang artinya ketika kita mengirim data ke Shared Flow,
+    Data langsung dikirim ke receiver tanpa perlu di collect terlebih dahulu oleh si receiver
+
+    Shared Flow vs Broadcast Channel
+    Shared Flow mulai dikenalkan di Kotlin 1.4
+    Shared Flow dirancang sebagai pengganti Broadcast Channel,pada kotlin 1.4 keatas broadcast sudah tidak direkomendasikan dan digantikan oleh shared flow
+    Shared Flow adalah turunan dari Flow, sehingga mendukung semua Flow operator (map, flatMap, filter, reduce, dan lain-lain)
+    Hal ini yang sangat membedakan dengan Channel yang hanya bisa menggunakan receive() untuk menerima data,di Shared Flow, kita bisa melakukan operasi apapun bawaan dari Flow operator seperti map,filter dan lain-lain
+    Shared Flow mendukung configurable buffer overflow strategy karena bisa menggunakan Flow Operator
+    Shared Flow bukanlah channel, walaupun shared flow pengganti broadcast channel namun shared flow bukanlah channel sehingga tidak ada operasi close
+    Untuk membuat receiver dari Shared Flow, kita bisa menggunakan function asSharedFlow()
+
+    kelebihan:
+    kelebihan penggunaan shareFlow dibanding menggunakan broadCast channel adalah lebih fleksibel
+    Serta bisa menggunakan berbagai macam fitur yang tersedia
+
+     */
+
     @Test
     fun testSharedFlow() {
         val scope = CoroutineScope(Dispatchers.IO)
@@ -210,14 +236,18 @@ class FlowTest {
         scope.launch {
             repeat(10) {
                 println("   Send     1 : $it : ${Date()}")
+                // membuat sender menggunakan emit
                 sharedFlow.emit(it)
                 delay(1000)
             }
         }
 
+        // pada sharedFlow kita dapat membuat receiver lebih dari satu buah
         scope.launch {
+            // membuat receiver data pertama menggunakan asSharedFlow
             sharedFlow.asSharedFlow()
-                    .buffer(10)
+                    // kita bisa menggunakan buffer pada flow
+                    .buffer(10) // this is buffer
                     .map { "Receive Job 1 : $it : ${Date()}" }
                     .collect {
                         delay(1000)
@@ -226,8 +256,11 @@ class FlowTest {
         }
 
         scope.launch {
+            // membuat receiver data kedua menggunakan asSharedFlow
             sharedFlow.asSharedFlow()
-                    .buffer(10)
+                    // kita bisa menggunakan buffer pada flow
+                    // fungsi buffer adalah ketika mengirim data ke shareFlow dan belum diterima akan ditampung di dalam sharedflow
+                    .buffer(10) // this is buffer
                     .map { "Receive Job 2 : $it : ${Date()}" }
                     .collect {
                         delay(2000)
@@ -239,8 +272,59 @@ class FlowTest {
             delay(22_000)
             scope.cancel()
         }
+        /*
+        output:
+           Send     1 : 0 : Sat Aug 27 09:55:06 ICT 2022
+           Send     1 : 1 : Sat Aug 27 09:55:07 ICT 2022
+           Send     1 : 2 : Sat Aug 27 09:55:08 ICT 2022
+        Receive Job 1 : 1 : Sat Aug 27 09:55:07 ICT 2022
+           Send     1 : 3 : Sat Aug 27 09:55:09 ICT 2022
+        Receive Job 2 : 1 : Sat Aug 27 09:55:07 ICT 2022
+        Receive Job 1 : 2 : Sat Aug 27 09:55:08 ICT 2022
+           Send     1 : 4 : Sat Aug 27 09:55:10 ICT 2022
+        Receive Job 1 : 3 : Sat Aug 27 09:55:09 ICT 2022
+        Receive Job 2 : 2 : Sat Aug 27 09:55:09 ICT 2022
+           Send     1 : 5 : Sat Aug 27 09:55:11 ICT 2022
+        Receive Job 1 : 4 : Sat Aug 27 09:55:10 ICT 2022
+           Send     1 : 6 : Sat Aug 27 09:55:12 ICT 2022
+        Receive Job 1 : 5 : Sat Aug 27 09:55:11 ICT 2022
+        Receive Job 2 : 3 : Sat Aug 27 09:55:11 ICT 2022
+           Send     1 : 7 : Sat Aug 27 09:55:13 ICT 2022
+        Receive Job 1 : 6 : Sat Aug 27 09:55:12 ICT 2022
+           Send     1 : 8 : Sat Aug 27 09:55:14 ICT 2022
+        Receive Job 1 : 7 : Sat Aug 27 09:55:13 ICT 2022
+        Receive Job 2 : 4 : Sat Aug 27 09:55:13 ICT 2022
+           Send     1 : 9 : Sat Aug 27 09:55:15 ICT 2022
+        Receive Job 1 : 8 : Sat Aug 27 09:55:14 ICT 2022
+        Receive Job 1 : 9 : Sat Aug 27 09:55:15 ICT 2022
+        Receive Job 2 : 5 : Sat Aug 27 09:55:15 ICT 2022
+        Receive Job 2 : 6 : Sat Aug 27 09:55:17 ICT 2022
+        Receive Job 2 : 7 : Sat Aug 27 09:55:19 ICT 2022
+        Receive Job 2 : 8 : Sat Aug 27 09:55:21 ICT 2022
+        Receive Job 2 : 9 : Sat Aug 27 09:55:23 ICT 2022
+         */
     }
 
+    /*
+    ========= State Flow =========
+
+    State Flow
+    State Flow adalah turunan dari Shared Flow, artinya di State Flow, kita bisa membuat banyak receiver Flow
+    Hal yg bisa kita lakukan di flow dan shared flow juga dapat kita lakukan pada state flow
+    Pada shared flow receiver akan menerima semua data yg ada sedangkan State Flow, receiver hanya akan menerima data paling baru
+    Jadi jika ada receiver yang sangat lambat dan sender mengirim data terlalu cepat, yang akan diterima oleh receiver adalah data paling akhir/data terbaru
+    State Flow cocok digunakan untuk maintain state, dimana memang biasanya state itu biasanya hanya satu data, tidak peduli berapa kali perubahan data tersebut,yang paling penting pada state adalah data terakhir
+    Untuk mendapatkan data state nya, kita bisa menggunakan field value di State Flow
+    Untuk membuat receiver kita bisa menggunakan asStateFlow()
+    State Flow bisa dirancang sebagai pengganti Conflated Broadcast Channel
+
+    catatan:
+    Sebenarnya pada state flow hanya terdapat satu buah data saja,sebab jika terdapat 2 data maka diambil hanya terbaru saja
+    Sedangkan data yang sebelumnya telah ada akan direplace oleh data terbaru jadi sebenarnya state flow hanya menyimpan satu data saja yaitu data terbaru
+
+    fungsi:
+    State flow dirancang sebagai pengganti conflated broadcast channel karena dinilai lebih efiesien dan mempunya fungsi yg sama yaitu sama-sama hanya mengirim data terbaru saja
+     */
     @Test
     fun testStateFlow() {
         val scope = CoroutineScope(Dispatchers.IO)
@@ -254,6 +338,8 @@ class FlowTest {
             }
         }
 
+        // pada state flow tidak diperbolehkan menggunakan buffer dikarenakan apabila menggunakan buffer data yg lama akan tetap tersimpan didalam antrian
+        // sedangkan pada stateFlow bertujuan me-replace data lama dengan data baru dan hanya mengirim data terbaru saja
         scope.launch {
             stateFlow.asStateFlow()
                     .map { "Receive Job 2 : $it : ${Date()}" }
@@ -267,5 +353,24 @@ class FlowTest {
             delay(22_000)
             scope.cancel()
         }
+        /*
+        output:
+           Send     1 : 0 : Sat Aug 27 21:26:08 ICT 2022
+        Receive Job 2 : 0 : Sat Aug 27 21:26:08 ICT 2022
+           Send     1 : 1 : Sat Aug 27 21:26:09 ICT 2022
+           Send     1 : 2 : Sat Aug 27 21:26:10 ICT 2022
+           Send     1 : 3 : Sat Aug 27 21:26:11 ICT 2022
+           Send     1 : 4 : Sat Aug 27 21:26:12 ICT 2022
+        Receive Job 2 : 4 : Sat Aug 27 21:26:13 ICT 2022
+           Send     1 : 5 : Sat Aug 27 21:26:13 ICT 2022
+           Send     1 : 6 : Sat Aug 27 21:26:14 ICT 2022
+           Send     1 : 7 : Sat Aug 27 21:26:15 ICT 2022
+           Send     1 : 8 : Sat Aug 27 21:26:16 ICT 2022
+           Send     1 : 9 : Sat Aug 27 21:26:17 ICT 2022
+        Receive Job 2 : 9 : Sat Aug 27 21:26:18 ICT 2022
+
+        Berdasarkan output terlihat jelas bahwa data yg diterima oleh receive selalu data terbaru,berarti sesuai dengan fungsi dari stateFlow
+        fungsi dari stateFlow adalah me-replace data lama dengan data terbaru dan selalu mengirimkan data yg terbaru ke receiver
+         */
     }
 }
